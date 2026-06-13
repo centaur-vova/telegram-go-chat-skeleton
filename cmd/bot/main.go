@@ -6,9 +6,9 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/centaur-vova/surskoe-chat-bot/internal/bot"
-	"github.com/centaur-vova/surskoe-chat-bot/internal/config"
-	"github.com/centaur-vova/surskoe-chat-bot/internal/logger"
+	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/bot"
+	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/config"
+	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/logger"
 )
 
 func main() {

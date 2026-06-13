@@ -1,4 +1,4 @@
-module github.com/centaur-vova/surskoe-chat-bot
+module github.com/centaur-vova/telegram-go-chat-skeleton
 
 go 1.26.1
 

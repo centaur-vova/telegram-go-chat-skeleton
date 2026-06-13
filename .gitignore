@@ -4,10 +4,6 @@
 *.dll
 *.so
 *.dylib
-surskoe_chat
-surskoe_chat_bot
-bot
-server
 
 # Test binary
 *.test
@@ -20,9 +16,6 @@ go.work
 
 # Environment variables
 .env
-
-# Real prompts config
-prompts/prompts.yaml
 
 # IDE
 .vscode/
@@ -41,5 +34,5 @@ Thumbs.db
 # Dependencies (if you vendor them)
 vendor/
 
-# Config
+# Real prompts config
 prompts.yaml

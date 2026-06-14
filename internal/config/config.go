@@ -9,31 +9,43 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/joho/godotenv"
-	"github.com/mymmrac/telego"
 	"gopkg.in/yaml.v3"
 )
 
-const promptsFile = "prompts.yaml"
+const configFile = "config.yaml"
+
+type SecretsConfig struct {
+	GeminiKey     string
+	TelegramToken string
+}
+
+type TelegramConfig struct {
+	ChatID int64 `yaml:"chat_id"`
+}
+
+type GeminiConfig struct {
+	Model string `yaml:"model"`
+}
+
+type BotConfig struct {
+	LogLevel    string `yaml:"log_level"`
+	PollTimeout int    `yaml:"poll_timeout"`
+}
 
 // Config holds all configuration for the bot.
 type Config struct {
-	LogLevel string
-
-	GeminiKey     string
-	GeminiModel   string
-	TelegramToken string
-	PollTimeout   int
-	ChatID        telego.ChatID
-
-	Prompts *PromptsConfig
+	Secrets  SecretsConfig  `yaml:"-"`
+	Bot      BotConfig      `yaml:"bot"`
+	Telegram TelegramConfig `yaml:"telegram"`
+	Gemini   GeminiConfig   `yaml:"gemini"`
+	Prompts  *PromptsConfig `yaml:"prompts"`
 }
 
 // Load reads .env file, parses environment variables, and loads prompts from YAML.
 // It exits with fatal log if required variables are missing or invalid.
-func Load() Config {
+func Load() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -44,56 +56,23 @@ func Load() Config {
 		log.Fatalf("GEMINI_API_KEY is not set")
 	}
 
-	geminiModel := os.Getenv("GEMINI_MODEL")
-	if geminiModel == "" {
-		log.Fatalf("GEMINI_MODEL is not set")
-	}
-
 	telegramToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if telegramToken == "" {
 		log.Fatal("TELEGRAM_BOT_TOKEN is not set")
 	}
 
-	chatIDStr := os.Getenv("TELEGRAM_CHAT_ID")
-	if chatIDStr == "" {
-		log.Fatal("TELEGRAM_CHAT_ID is not set")
-	}
-
-	chatIDInt, err := strconv.ParseInt(chatIDStr, 10, 64)
+	// Load config
+	cfg, err := loadConfig(configFile)
 	if err != nil {
-		log.Fatal("Invalid TELEGRAM_CHAT_ID format")
-	}
-	chatID := telego.ChatID{ID: chatIDInt}
-
-	pollTimeoutStr := os.Getenv("POLL_TIMEOUT")
-	if pollTimeoutStr == "" {
-		log.Fatal("POLL_TIMEOUT is not set")
-	}
-	pollTimeout, err := strconv.Atoi(pollTimeoutStr)
-	if err != nil {
-		log.Fatalf("Invalid POLL_TIMEOUT format: %v", err)
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Load prompts
-	prompts, err := loadPrompts(promptsFile)
-	if err != nil {
-		log.Fatalf("Failed to load prompts: %v", err)
-	}
-
-	return Config{
-		// App
-		LogLevel: os.Getenv("LOG_LEVEL"),
-
-		// Keys/Config
+	cfg.Secrets = SecretsConfig{
 		GeminiKey:     geminiKey,
-		GeminiModel:   geminiModel,
 		TelegramToken: telegramToken,
-		ChatID:        chatID,
-
-		// Settings
-		PollTimeout: pollTimeout,
-		Prompts:     prompts,
 	}
+
+	return cfg
 }
 
 // PromptsConfig contains all prompt templates loaded from YAML.
@@ -110,17 +89,17 @@ type promptsConfigMessages struct {
 	Welcome   string `yaml:"welcome"`
 }
 
-// loadPrompts reads and parses the prompts YAML file at the given path.
-func loadPrompts(path string) (*PromptsConfig, error) {
+// loadConfig reads and parses the config YAML file at the given path.
+func loadConfig(path string) (*Config, error) {
 	// #nosec G304 — prompts file path is configured by the developer
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read prompts file: %w", err)
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var cfg PromptsConfig
+	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse prompts file: %w", err)
+		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
 	return &cfg, nil

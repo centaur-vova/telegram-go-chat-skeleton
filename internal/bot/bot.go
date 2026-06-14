@@ -17,24 +17,26 @@ import (
 type Bot struct {
 	bot    *telego.Bot
 	gemini *gemini.Client
-	cfg    config.Config
+	cfg    *config.Config
+	chatID telego.ChatID
 }
 
 // New creates a new Bot instance. It initializes the Telegram bot and
 // Gemini client. If bot creation fails, it logs a fatal error.
-func New(cfg config.Config) *Bot {
+func New(cfg *config.Config) *Bot {
 	// Create bot instance
-	bot, err := telego.NewBot(cfg.TelegramToken, telego.WithDefaultDebugLogger())
+	bot, err := telego.NewBot(cfg.Secrets.TelegramToken, telego.WithDefaultDebugLogger())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Gemini client
-	client := gemini.New(cfg.GeminiModel, cfg.GeminiKey)
+	client := gemini.New(cfg.Gemini.Model, cfg.Secrets.GeminiKey)
 
 	return &Bot{
 		bot:    bot,
 		gemini: client,
+		chatID: telego.ChatID{ID: cfg.Telegram.ChatID},
 		cfg:    cfg,
 	}
 }
@@ -44,7 +46,7 @@ func New(cfg config.Config) *Bot {
 func (b *Bot) Subscribe(ctx context.Context) (<-chan telego.Update, error) {
 	// Get updates channel via long polling with context
 	params := &telego.GetUpdatesParams{
-		Timeout: b.cfg.PollTimeout,
+		Timeout: b.cfg.Bot.PollTimeout,
 	}
 	return b.bot.UpdatesViaLongPolling(ctx, params)
 }
@@ -52,7 +54,7 @@ func (b *Bot) Subscribe(ctx context.Context) (<-chan telego.Update, error) {
 // Handle processes incoming updates and dispatches commands to handlers.
 // It filters messages from chats other than the configured chat ID.
 func (b *Bot) Handle(ctx context.Context, updates <-chan telego.Update) {
-	chatID := b.cfg.ChatID
+	chatID := b.chatID
 	prompts := b.cfg.Prompts
 
 	for update := range updates {

@@ -34,5 +34,5 @@ Thumbs.db
 # Dependencies (if you vendor them)
 vendor/
 
-# Real prompts config
-prompts.yaml
+# Real config
+config.yaml

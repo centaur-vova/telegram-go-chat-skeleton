@@ -18,7 +18,7 @@ import (
 func main() {
 	cfg := config.Load()
 
-	logger.Init(cfg.LogLevel)
+	logger.Init(cfg.Bot.LogLevel)
 
 	// Context
 	ctx, cancel := context.WithCancel(context.Background())

@@ -18,7 +18,7 @@ This is a personal skeleton project I use as a starting point for my own Telegra
 
 1. Clone the repo
 2. Copy `.env.example` to `.env` and fill in your tokens
-3. Copy `prompts.example.yaml` to `prompts.yaml`
+3. Copy `config.example.yaml` to `config.yaml`
 4. Run:
 ```bash
 go run cmd/bot/main.go
@@ -41,8 +41,6 @@ prompts.example.yaml   # example prompts file
 - `TELEGRAM_BOT_TOKEN` — your bot token from BotFather
 - `TELEGRAM_CHAT_ID` — target chat ID (group or private)
 - `GEMINI_API_KEY` — Gemini API key (optional)
-- `LOG_LEVEL` — slog level: debug, info, warn, error (default: info)
-- `POLL_TIMEOUT` — long polling timeout in seconds (default: 30)
 
 ## Commands
 

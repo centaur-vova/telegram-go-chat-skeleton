@@ -9,7 +9,6 @@ import (
 
 	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/config"
 	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/logger"
-	"github.com/mymmrac/telego"
 	"github.com/mymmrac/telego/telegoutil"
 )
 
@@ -19,7 +18,8 @@ import (
 //
 // The prompt asks Gemini to recall a real positive event from rural Russia
 // and adapt it to the local context of Surskoye.
-func (b *Bot) news(ctx context.Context, chatID telego.ChatID, prompts *config.PromptsConfig) {
+func (b *Bot) news(ctx context.Context, prompts *config.PromptsConfig) {
+	chatID := b.chatID
 	msg, _ := b.bot.SendMessage(ctx, telegoutil.Message(chatID, prompts.Messages.Recording))
 
 	userPrompt := `Вспомни одно реальное позитивное событие из жизни любой российской сельской глубинки за последние два года (например: благоустройство сквера, ремонт дороги, открытие почты, победа на районных соревнованиях, закупка тракторов). Перенеси это событие в р.п. Сурское и перепиши строго по инструкции`
@@ -44,8 +44,8 @@ func (b *Bot) news(ctx context.Context, chatID telego.ChatID, prompts *config.Pr
 }
 
 // start handles the /start command. It sends a welcome message to the chat.
-func (b *Bot) start(ctx context.Context, chatID telego.ChatID, prompts *config.PromptsConfig) {
-	_, err := b.bot.SendMessage(ctx, telegoutil.Message(chatID, prompts.Messages.Welcome))
+func (b *Bot) start(ctx context.Context, prompts *config.PromptsConfig) {
+	_, err := b.bot.SendMessage(ctx, telegoutil.Message(b.chatID, prompts.Messages.Welcome))
 	if err != nil {
 		logger.Error("Error sending message", "error", err)
 	}

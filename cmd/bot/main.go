@@ -13,6 +13,8 @@ import (
 	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/bot"
 	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/config"
 	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/logger"
+	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/plugins"
+	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/plugins/profanity"
 )
 
 func main() {
@@ -24,8 +26,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Bot
-	bot := bot.New(cfg)
+	// Bot / plugins
+	profanityPlugin := profanity.New(&cfg.Plugins.Profanity)
+	plugins := []plugins.Plugin{
+		profanityPlugin,
+	}
+	bot := bot.New(cfg, plugins)
 
 	// Subscribe for updates
 	updates, err := bot.Subscribe(ctx)

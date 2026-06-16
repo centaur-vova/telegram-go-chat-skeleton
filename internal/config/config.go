@@ -16,22 +16,40 @@ import (
 
 const configFile = "config.yaml"
 
+// SecretsConfig holds sensitive credentials loaded from environment variables.
+// These are never written to config.yaml and are excluded from version control.
 type SecretsConfig struct {
 	GeminiKey     string
 	TelegramToken string
 }
 
+// TelegramConfig holds non-sensitive Telegram settings from config.yaml.
 type TelegramConfig struct {
 	ChatID int64 `yaml:"chat_id"`
 }
 
+// GeminiConfig holds configuration for Google Gemini AI.
 type GeminiConfig struct {
 	Model string `yaml:"model"`
 }
 
+// BotConfig holds core bot runtime settings.
 type BotConfig struct {
 	LogLevel    string `yaml:"log_level"`
 	PollTimeout int    `yaml:"poll_timeout"`
+}
+
+// PluginsConfig aggregates all plugin configurations.
+type PluginsConfig struct {
+	// Profanity filter plugin settings.
+	Profanity ProfanityConfig `yaml:"profanity"`
+}
+
+// ProfanityConfig holds configuration for the profanity filter plugin.
+type ProfanityConfig struct {
+	Enabled  bool     `yaml:"enabled"`
+	BadWords []string `yaml:"bad_words"`
+	Action   string   `yaml:"action"` // delete, warn, mute
 }
 
 // Config holds all configuration for the bot.
@@ -41,6 +59,7 @@ type Config struct {
 	Telegram TelegramConfig `yaml:"telegram"`
 	Gemini   GeminiConfig   `yaml:"gemini"`
 	Prompts  *PromptsConfig `yaml:"prompts"`
+	Plugins  PluginsConfig  `yaml:"plugins"`
 }
 
 // Load reads .env file, parses environment variables, and loads prompts from YAML.

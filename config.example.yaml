@@ -8,6 +8,14 @@ telegram:
 gemini:
   model: gemini-flash-latest
 
+plugins:
+  profanity:
+    enabled: true
+    bad_words:
+      - "сука"
+      - "бля"
+    action: "delete"  # delete, warn, mute
+
 prompts:
   # Example prompts configuration for Sursky Spacefleet bot
   # Copy this file to prompts.yaml and customize it

@@ -10,20 +10,22 @@ import (
 
 	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/config"
 	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/gemini"
+	"github.com/centaur-vova/telegram-go-chat-skeleton/internal/plugins"
 	"github.com/mymmrac/telego"
 )
 
 // Bot represents a Telegram bot instance with its dependencies.
 type Bot struct {
-	bot    *telego.Bot
-	gemini *gemini.Client
-	cfg    *config.Config
-	chatID telego.ChatID
+	bot     *telego.Bot
+	gemini  *gemini.Client
+	cfg     *config.Config
+	chatID  telego.ChatID
+	plugins []plugins.Plugin
 }
 
 // New creates a new Bot instance. It initializes the Telegram bot and
 // Gemini client. If bot creation fails, it logs a fatal error.
-func New(cfg *config.Config) *Bot {
+func New(cfg *config.Config, plugins []plugins.Plugin) *Bot {
 	// Create bot instance
 	bot, err := telego.NewBot(cfg.Secrets.TelegramToken, telego.WithDefaultDebugLogger())
 	if err != nil {
@@ -34,10 +36,11 @@ func New(cfg *config.Config) *Bot {
 	client := gemini.New(cfg.Gemini.Model, cfg.Secrets.GeminiKey)
 
 	return &Bot{
-		bot:    bot,
-		gemini: client,
-		chatID: telego.ChatID{ID: cfg.Telegram.ChatID},
-		cfg:    cfg,
+		bot:     bot,
+		gemini:  client,
+		chatID:  telego.ChatID{ID: cfg.Telegram.ChatID},
+		cfg:     cfg,
+		plugins: plugins,
 	}
 }
 
@@ -54,7 +57,6 @@ func (b *Bot) Subscribe(ctx context.Context) (<-chan telego.Update, error) {
 // Handle processes incoming updates and dispatches commands to handlers.
 // It filters messages from chats other than the configured chat ID.
 func (b *Bot) Handle(ctx context.Context, updates <-chan telego.Update) {
-	chatID := b.chatID
 	prompts := b.cfg.Prompts
 
 	for update := range updates {
@@ -63,20 +65,30 @@ func (b *Bot) Handle(ctx context.Context, updates <-chan telego.Update) {
 		}
 
 		// Ignore messages from other chats
-		if update.Message.Chat.ID != chatID.ID {
+		if update.Message.Chat.ID != b.chatID.ID {
+			continue
+		}
+
+		// plugins
+		handled := false
+		for _, p := range b.plugins {
+			if p.Handle(ctx, b.bot, &update) {
+				handled = true
+				break
+			}
+		}
+		if handled {
 			continue
 		}
 
 		text := update.Message.Text
-
 		// /news command — generate a real news article, well, "almost" real haha
 		if text == "/news" {
-			b.news(ctx, chatID, prompts)
+			b.news(ctx, prompts)
 		}
-
 		// /start command — welcome message
 		if text == "/start" {
-			b.start(ctx, chatID, prompts)
+			b.start(ctx, prompts)
 		}
 	}
 }
